@@ -6,4 +6,4 @@ Repository contains various approaches to process and analysis github events dat
 * NoSql database using MongoDB - to do
 * Data lakes using AWS - to do
 * Aggregations using Spark Python - [show](pyspark_agg/README.md)
-* Aggregations using Spark Scala - to do
+* Aggregations using Spark Scala - [show](spark_scala_agg/README.md)
