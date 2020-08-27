@@ -8,9 +8,9 @@ Results are written to parquet files. Project has been configured in `IntelliJ I
 
 **Structure**
 
-* [Download_events](github_scala\src\main\scala\Download_events.scala) - downloads data for given year and month 
-* [Events_processing](github_scala\src\main\scala\Events_processing.scala) - process data for year month with use of Scala Spark
-* [Aggregations](github_scala\src\main\scala\Aggregations.scala) - creates aggreagtions
+* [Download_events](github_scala/src/main/scala/Download_events.scala) - downloads data for given year and month 
+* [Events_processing](github_scala/src/main/scala/Events_processing.scala) - process data for year month with use of Scala Spark
+* [Aggregations](github_scala/src/main/scala/Aggregations.scala) - creates aggreagtions
 
 **Description**
 
