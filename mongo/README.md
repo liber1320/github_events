@@ -11,7 +11,7 @@ The scripts have been created in Python. PySpark has been used in order to effec
 * [github_daily_download](github_daily_download.py) - downloads data for year month and day passed as parameter;
 * [github_daily_process](github_daily_process_json.py) - process data for year month and day passed as parameter with use of PySpark;
 * [config file](mongo.cfg) - contains paramaters for cluster and input file;
-* [github_etl](github_etl_mongo.py) - inserts data into the MongoDB cluster;
+* [github_etl](github_daily_etl_mongo.py) - inserts data into the MongoDB cluster;
 * [analytic queries](mongo.ipynb) - examples of NoSql queries.
 
 **Schema**
@@ -30,5 +30,5 @@ To run the project please do the following order:
 1. Run github_daily_download.py (script requires year month and day as argument)
 2. Run github_daily_process_json.py (script requires year month and day as argument)
 3. Fill in mongo.cfg file with Mongo cluster parameters and path to directory with input file
-4. Run github_etl_mongo.py (script uses parameters from mongo.cfg file)
+4. Run github_daily_etl_mongo.py (script uses parameters from mongo.cfg file)
 
