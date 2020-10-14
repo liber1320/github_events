@@ -25,7 +25,7 @@ def download_data(year, month, day):
 			filename, headers = opener.retrieve(url, filename)
 		except Exception as exc:
 			logging.info('There was a problem for day %s hour %s: %s ' % (day, i, exc))
-	logging.info('******* Data downloading ended. *******')
+	logging.info('******* Data downloading finished. *******')
 
 def main():
 	""" Run pipeline for given month  year and day in format 'YYYY', 'MM', 'DD' """
@@ -38,7 +38,7 @@ def main():
 		day = sys.argv[3] 
 	except:
 		logging.info('Wrong date. Check if date is passed as year and month (YYYY, MM, DD)')
-		
+
 	if (int(year) >=2010) & (int(year)<= datetime.datetime.now().year) \
 		& (int(month)<=12) & (int(month)>=1) & (len(month)==2) \
 		& (int(day)<=31) & (int(day)>=1) & (len(day)==2):

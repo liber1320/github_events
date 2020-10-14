@@ -1,11 +1,11 @@
-import os
-import sys 
 import pyspark
 import pyspark.sql.functions as f
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SparkSession
 import datetime
 import logging
+import os
+import sys 
 
 def create_spark_session():
 	conf = pyspark.SparkConf().setAppName('appName').setMaster('local')
@@ -15,7 +15,8 @@ def create_spark_session():
 	return spark
 
 def filter_data(df):
-	"""Function filters data frame choicing: created PullRequest Events, Issues Events, Fork Events."""
+	"""Function filters data frame by choosing subset of events."""
+
 	df = df.filter(((df.type=="PullRequestEvent") & (df.payload.action=='opened')) | \
 		((df.type=="IssuesEvent") & (df.payload.action=='opened')) | \
 		(df.type=="ForkEvent"))
@@ -23,24 +24,30 @@ def filter_data(df):
 
 def select_columns(df):
 	"""Function select set of columns for further transformations and adds aliases"""
+
 	df = df.selectExpr(["created_at", "actor['id'] as actor_id", "actor['login'] as actor_login", \
-						"repo['id'] as repo_id", "repo['name'] as repo_name", "type"]) 
+						"actor['display_login'] as display_login", "repo['id'] as repo_id", \
+						"repo['name'] as repo_name", "type"]) 
 	return df
 
 def process_json(year, month, day, spark):
-	"""Function processes json file for each day: 
-	filtering data, calculating field, select columns and write results to parquet file."""
-	
-	path = "{}-{}-{}".format(year, month, str(day).zfill(2))
+	"""Function processes json file for each day by: 
+	- filtering data, 
+	- calculating field,
+	- selecting columns 
+	- writing results to parquet file"""
+
+	input_file = "{}-{}-{}".format(year, str(month).zfill(2), str(day).zfill(2))
+	output_file = "df_{}.parquet".format(input_file)
 	try:
-		df = spark.read.json(path)
+		df = spark.read.json(input_file)
 	except Exception as exc:
-		logging.info('No data for path %s Exception: %s' % (path, exc))
-	df = spark.read.json(path)
+		logging.info('No data for path %s Exception: %s' % (input_file, exc))
+
 	df = filter_data(df)
 	df = select_columns(df)
-	output_file = "df_{}.parquet".format(path)
 	df.write.parquet(output_file)
+
 	logging.info('******* Github data processed successfully. *******')
 
 def main():
@@ -58,6 +65,7 @@ def main():
 	if (int(year) >=2010) & (int(year)<= datetime.datetime.now().year) \
 		& (int(month)<=12) & (int(month)>=1) & (len(month)==2) \
 		& (int(day)<=31) & (int(day)>=1) & (len(day)==2):
+
 		spark = create_spark_session()
 		process_json(year, month, day, spark)
 	else:

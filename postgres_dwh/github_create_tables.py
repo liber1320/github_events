@@ -1,23 +1,25 @@
-import psycopg2
 from github_sql_queries import create_table_queries, drop_table_queries
+import psycopg2
 import logging
+import configparser
 
 def create_database():
     """
     Creates and connects to the gitdb
     Returns the connection and cursor to gitdb
     """
-    conn = psycopg2.connect("host=127.0.0.1 dbname=postgres user=postgres password==student")
+    config = configparser.ConfigParser()
+    config.read('postgres.cfg')
+
+    conn = psycopg2.connect("host={} dbname={} user={} password={}".format(*config['DB_MAIN'].values()))
     conn.set_session(autocommit=True)
     cur = conn.cursor()
-    
-    #create gitdb database with UTF8 encoding
-    cur.execute("DROP DATABASE IF EXISTS gitdb")
-    cur.execute("CREATE DATABASE gitdb WITH ENCODING 'utf8' TEMPLATE template0")
+    cur.execute("DROP DATABASE IF EXISTS gitdb_")
+    cur.execute("CREATE DATABASE gitdb_ WITH ENCODING 'utf8' TEMPLATE template0")
+    logging.info('Database ready')
     conn.close()    
-    
-    # connect to gitdb database
-    conn = psycopg2.connect("host=127.0.0.1 dbname=gitdb user=postgres password==student")")
+
+    conn = psycopg2.connect("host={} dbname={} user={} password={}".format(*config['DB_GIT'].values()))
     cur = conn.cursor()
     return cur, conn
 
@@ -28,6 +30,7 @@ def drop_tables(cur, conn):
     for query in drop_table_queries:
         cur.execute(query)
         conn.commit()
+    logging.info('Tables dropped')
 
 def create_tables(cur, conn):
     """
@@ -36,11 +39,12 @@ def create_tables(cur, conn):
     for query in create_table_queries:
         cur.execute(query)
         conn.commit()
+    logging.info('Tables created')
 
 def main():
     """
-    - Drops (if exists) and Creates the sparkify database. 
-    - Establishes connection with the sparkify database and gets cursor to it.  
+    - Drops (if exists) and Creates database. 
+    - Establishes connection with the database and gets cursor to it.  
     - Drops all the tables.  
     - Creates all tables needed. 
     - Finally, closes the connection. 
@@ -50,10 +54,10 @@ def main():
 
     cur, conn = create_database()
     drop_tables(cur, conn)
-    logging.info('Tables dropped')
     create_tables(cur, conn)
-    logging.info('Tables created')
     conn.close()
+
+    logging.info('End of program')
 
 if __name__ == "__main__":
     main()
