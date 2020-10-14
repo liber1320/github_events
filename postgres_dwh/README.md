@@ -14,6 +14,7 @@ The scripts have been created in Python, leveraging its convenient wrapper aroun
 * [github_daily_process](github_daily_process.py) - process data for year month and day passed as parameter with use of PySpark;
 * [events dict](data/events.csv) - dictionary for events data used in etl;
 * [github_daily_etl](github_daily_etl.py) - defines the ETL pipeline, inserts data into the Postgres database;
+* [config file](postgres.cfg) - contains paramaters for db;
 * [analytic queries](data_analysis.ipynb) - examples of database queries.
 
 **Schema**
@@ -21,7 +22,7 @@ The scripts have been created in Python, leveraging its convenient wrapper aroun
 The database contains the following fact table:
 * `events` - user's events
 
-Fact table `events` table has foreign keys to the following dimension tables:
+Fact table `events` is connected with the following dimension tables:
 * `actors`
 * `repos`
 * `events_dict`
