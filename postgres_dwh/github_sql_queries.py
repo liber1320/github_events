@@ -56,7 +56,7 @@ event_dict_table_insert = ("INSERT INTO events_dict \
                           (event, DWH_START, DWH_END) \
                            VALUES(%s, %s, %s) ON CONFLICT DO NOTHING")
 
-# UPDATE RECORDS
+# UPDATE actors
 actor_table_update = ("UPDATE actors \
                        SET DWH_END = %s  \
                        WHERE actor_id=%s and actor_login=%s")
@@ -67,7 +67,7 @@ actor_select = ("SELECT id \
                  WHERE actor_id=%s and actor_login=%s")
 
 # FIND actor display login
-actor_login_select = ("SELECT display_login \
+actor_login_select = ("SELECT actor_id, actor_login, display_login \
                        FROM actors \
                        WHERE actor_id=%s and actor_login=%s")
 
