@@ -1,47 +1,82 @@
-import os
-import sys 
 import pyspark
 import pyspark.sql.functions as f
-from pyspark import SparkContext, SparkConf
 from pyspark.sql import SparkSession
 import datetime
 import logging
+import os
+import sys 
+import argparse
+
+def parse_arguments():
+	"""Function command line parameters."""
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-y', '--year', help = 'year')
+	parser.add_argument('-m', '--month', help = 'month')
+	parser.add_argument('-d', '--day', help = 'day')
+	args = parser.parse_args()
+	dict_args = vars(args)
+	return dict_args
+
+def date_validation(year, month, day):
+	"""Function validates initial date parameters."""
+
+	if (int(year) >= 2010) & \
+		(int(year) <= datetime.datetime.now().year) & \
+		(int(month) <= 12) & \
+		(int(month) >= 1) & \
+		(len(month) == 2) & \
+		(int(day)<=31) & \
+		(int(day)>=1) & \
+		(len(day)==2):
+		return 1
+	else:
+		return 0
 
 def create_spark_session():
-	conf = pyspark.SparkConf().setAppName('appName').setMaster('local')
+	"""Function creates spark objects for further spark operations."""
+
+	conf = pyspark.SparkConf().setMaster('local')
 	sc = pyspark.SparkContext(conf = conf)
 	spark = SparkSession(sc)
 	logging.info('******* Spark session created ******* ')
 	return spark
 
-def filter_data(df):
-	"""Function filters data frame choicing: created PullRequest Events, Issues Events, Fork Events."""
-	df = df.filter(((df.type=="PullRequestEvent") & (df.payload.action=='opened')) | \
-		((df.type=="IssuesEvent") & (df.payload.action=='opened')) | \
-		(df.type=="ForkEvent"))
-	return df
+def process_data(df):
+	"""Function filters data choicing, selects set of columns for further transformations and adds aliases"""
 
-def select_columns(df):
-	"""Function select set of columns for further transformations and adds aliases"""
-	df = df.selectExpr(["created_at", "actor['id'] as actor_id", "actor['login'] as actor_login", \
-						"repo['id'] as repo_id", "repo['name'] as repo_name", "type"]) 
-	df = df.withColumn("actor_id", df.actor_id.cast("string")).withColumn("repo_id", df.repo_id.cast("string"))
-	df.printSchema()
-	return df
+	df_f = df.filter(((df.type=="PullRequestEvent") & (df.payload.action=='opened')) | \
+					((df.type=="IssuesEvent") & (df.payload.action=='opened')) | \
+					(df.type=="ForkEvent")) \
+
+	df_s = df_f.selectExpr(["created_at", \
+						"actor['id'] as actor_id",  \
+						"actor['login'] as actor_login", \
+						"repo['id'] as repo_id", \
+						"repo['name'] as repo_name", \
+						"type"])
+
+	df_a = df_s.withColumn("actor_id", df_s.actor_id.cast("string")) \
+				.withColumn("repo_id", df_s.repo_id.cast("string"))
+
+	return df_a
 
 def process_json(year, month, day, spark):
 	"""Function processes json file for each day: 
-	filtering data, calculating field, select columns and write results to parquet file."""
-	
+	- filtering data, 
+	- calculating field, 
+	- selecting columns 
+	- writing results to json file."""
+
 	path = "{}-{}-{}".format(year, month, str(day).zfill(2))
 	try:
 		df = spark.read.json(path)
 	except Exception as exc:
 		logging.info('No data for path %s Exception: %s' % (path, exc))
-	df = filter_data(df)
-	df = select_columns(df)
+	df_p = process_data(df)
+
 	output_file = "df_{}".format(path)
-	df.write.json(output_file)
+	df_p.write.json(output_file)
 	logging.info('******* Github data processed successfully. *******')
 
 def main():
@@ -49,21 +84,20 @@ def main():
 	logging.basicConfig(level=logging.INFO, format='%(asctime)s -  %(levelname)s-%(message)s')
 	logging.info('Start of program')
 
-	try:
-		year = sys.argv[1]
-		month = sys.argv[2] 
-		day = sys.argv[3] 
-	except:
-		logging.info('Wrong date. Check if date is passed as year and month (YYYY, MM, DD)')
-		
-	if (int(year) >=2010) & (int(year)<= datetime.datetime.now().year) \
-		& (int(month)<=12) & (int(month)>=1) & (len(month)==2) \
-		& (int(day)<=31) & (int(day)>=1) & (len(day)==2):
-		spark = create_spark_session()
-		process_json(year, month, day, spark)
+	args = parse_arguments()
+	year = args['year']
+	month = args['month']
+	day = args['day']
+
+	if (month != None) & (year != None) & (day != None):
+		if date_validation(year, month, day) == 1:
+			spark = create_spark_session()
+			process_json(year, month, day, spark)
+		else:
+			logging.info('Wrong date. Check if parameters are passed correctly')
 	else:
-		logging.info('Wrong date. Check if date is passed as year and month (YYYY, MM, DD)')
-		
+		logging.info('No parameters found. ')
+
 	logging.info('End of program')
 
 if __name__ == "__main__":
