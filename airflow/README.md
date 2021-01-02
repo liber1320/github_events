@@ -26,7 +26,7 @@ Graph for the pipeline in Airflow can be visible [here](dag.png)
 * [create_stage_tables](create_stage_tables.sql) - contains the SQL queries used to create the stage tables in Redshift (used in ETL process);
 * [drop_stage_tables](drop_stage_tables.sql) - contains the SQL queries used to drop the stage tables in Redshift (used in ETL process);
 * [sql_queries](plugins/helpers/sql_queries.py) - contains the SQL queries used in the ETL process;
-* [airflow_param](airflow_param.cfg) - configruation files containing names of connections and parameters;
+* [airflow_param](airflow_param.cfg) - configuration files containing names of connections and parameters;
 * [spark_git_process](spark_git_process.py) - PySpark script used in data processing;
 
 The following operators have been defined:

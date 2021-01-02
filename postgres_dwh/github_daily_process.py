@@ -1,52 +1,100 @@
 import pyspark
 import pyspark.sql.functions as f
-from pyspark import SparkContext, SparkConf
 from pyspark.sql import SparkSession
 import datetime
-import os
-import sys
 import logging
+import os
+import sys 
+import argparse
+
+def parse_arguments():
+	"""Function command line parameters."""
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-y', '--year', help = 'year')
+	parser.add_argument('-m', '--month', help = 'month')
+	parser.add_argument('-d', '--day', help = 'day')
+	args = parser.parse_args()
+	dict_args = vars(args)
+	return dict_args
+
+def date_validation(year, month, day):
+	"""Function validates initial date parameters."""
+
+	if (int(year) >= 2010) & \
+		(int(year) <= datetime.datetime.now().year) & \
+		(int(month) <= 12) & \
+		(int(month) >= 1) & \
+		(len(month) == 2) & \
+		(int(day)<=31) & \
+		(int(day)>=1) & \
+		(len(day)==2):
+		return 1
+	else:
+		return 0
+
+def create_spark_session():
+	"""Function creates spark objects for further spark operations."""
+
+	conf = pyspark.SparkConf().setMaster('local')
+	sc = pyspark.SparkContext(conf = conf)
+	spark = SparkSession(sc)
+	logging.info('******* Spark session created ******* ')
+	return spark
+
+def process_data(df):
+	"""Function filters data choicing, selects set of columns for further transformations and adds aliases"""
+
+	df_f = df.filter(((df.type=="PullRequestEvent") & (df.payload.action=='opened')) | \
+					((df.type=="IssuesEvent") & (df.payload.action=='opened')) | \
+					(df.type=="ForkEvent")) \
+
+	df_s = df_f.selectExpr(["created_at", \
+						"actor['id'] as actor_id",  \
+						"actor['login'] as actor_login", \
+						"repo['id'] as repo_id", \
+						"repo['name'] as repo_name", \
+						"type"])
+	return df_s
+
+def process_json(year, month, day, spark):
+	"""Function processes json file for each day: 
+	- filtering data, 
+	- calculating field, 
+	- selecting columns 
+	- writing results to parquet file."""
+
+	path = "{}-{}-{}".format(year, month, str(day).zfill(2))
+	try:
+		df = spark.read.json(path)
+	except Exception as exc:
+		logging.info('No data for path %s Exception: %s' % (path, exc))
+	df_p = process_data(df)
+
+	output_file = "df_{}.parquet".format(path)
+	df_p.write.parquet(output_file)
+	logging.info('******* Github data processed successfully. *******')
 
 def main():
+	""" Run pipeline for given month and year in format 'YYYY', 'MM' """
 	logging.basicConfig(level=logging.INFO, format='%(asctime)s -  %(levelname)s-%(message)s')
-	logging.info('Start of the program')
+	logging.info('Start of program')
 
-	try:
-		year = sys.argv[1]
-		month = sys.argv[2] 
-		day = sys.argv[3] 
-	except:
-		logging.info('Wrong date. Check if date is passed as year and month (YYYY, MM, DD)')
+	args = parse_arguments()
+	year = args['year']
+	month = args['month']
+	day = args['day']
 
-	if (int(year) >=2010) & (int(year)<= datetime.datetime.now().year) \
-		& (int(month)<=12) & (int(month)>=1) & (len(month)==2) \
-		& (int(day)<=31) & (int(day)>=1) & (len(day)==2):
-
-		path = "{}-{}-{}".format(year, month, str(day).zfill(2))
-
-		if os.path.isdir(path):
-			conf = pyspark.SparkConf().setAppName('Git').setMaster('local')
-			sc = pyspark.SparkContext(conf = conf)
-			spark = SparkSession(sc)
-			logging.info('******* Spark session created ******* ')
-
-			df = spark.read.json(path)
-			df = df.filter(((df.type=="PullRequestEvent") & (df.payload.action=='opened')) | \
-						((df.type=="IssuesEvent") & (df.payload.action=='opened')) | \
-						(df.type=="ForkEvent")) \
-					.selectExpr(["created_at", "actor['id'] as actor_id", "actor['login'] as actor_login", \
-							"actor['display_login'] as display_login","repo['id'] as repo_id", \
-							"repo['name'] as repo_name", "type"])
-
-			output_file = "df_{}.parquet".format(path)
-			df.write.parquet(output_file)
-			logging.info('******* Github data processed successfully. *******')
+	if (month != None) & (year != None) & (day != None):
+		if date_validation(year, month, day) == 1:
+			spark = create_spark_session()
+			process_json(year, month, day, spark)
 		else:
-			logging.info('Directory not exists')
+			logging.info('Wrong date. Check if parameters are passed correctly')
 	else:
-		logging.info('Wrong date')
+		logging.info('No parameters found. ')
 
-		logging.info('End of program')
+	logging.info('End of program')
 
 if __name__ == "__main__":
 		main()
