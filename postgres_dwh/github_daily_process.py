@@ -52,6 +52,7 @@ def process_data(df):
 	df_s = df_f.selectExpr(["created_at", \
 						"actor['id'] as actor_id",  \
 						"actor['login'] as actor_login", \
+						"actor['display_login'] as display_login", \
 						"repo['id'] as repo_id", \
 						"repo['name'] as repo_name", \
 						"type"])

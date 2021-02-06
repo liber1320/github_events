@@ -14,8 +14,8 @@ def create_database():
     conn = psycopg2.connect("host={} dbname={} user={} password={}".format(*config['DB_MAIN'].values()))
     conn.set_session(autocommit=True)
     cur = conn.cursor()
-    cur.execute("DROP DATABASE IF EXISTS gitdb_")
-    cur.execute("CREATE DATABASE gitdb_ WITH ENCODING 'utf8' TEMPLATE template0")
+    cur.execute("DROP DATABASE IF EXISTS gitdb")
+    cur.execute("CREATE DATABASE gitdb WITH ENCODING 'utf8' TEMPLATE template0")
     logging.info('Database ready')
     conn.close()    
 

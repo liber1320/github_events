@@ -8,6 +8,15 @@ import logging
 import configparser
 import hashlib
 from datetime import date
+import argparse
+
+def parse_arguments():
+    """Function command line parameters."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--path', help = 'path_to_file')
+    args = parser.parse_args()
+    dict_args = vars(args)
+    return dict_args
 
 def process_event_dict_data(cur, conn, filepath):
     df = pd.read_csv(filepath)
@@ -48,7 +57,7 @@ def process_actor_data(cur, conn, filepath):
             dwh_hash = hashlib.md5(str(actor_id).encode('utf-8') + actor_login.encode('utf-8') + display_login.encode('utf-8'))
 
             if dwh_hash.hexdigest() != src_hash.hexdigest():
-               cur.execute(actor_table_update, (dwh_start, row[0], row[1])) 
+               cur.execute(actor_table_update, (dwh_start, str(row[0]), row[1])) 
                cur.execute(actor_table_insert, data_to_insert)
             else:
                continue
@@ -112,10 +121,8 @@ def main():
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s -  %(levelname)s-  %(message)s')
     logging.info('Start of program')
 
-    try:
-       filepath = sys.argv[1] 
-    except:
-       logging.info('Improper path.')
+    args = parse_arguments()
+    filepath = args['path']
 
     config = configparser.ConfigParser()
     config.read('postgres.cfg')
@@ -128,12 +135,15 @@ def main():
     else: 
        logging.info('Dict path not exists.')
 
-    if (os.path.exists(filepath)): 
-        process_actor_data(cur, conn, filepath)
-        process_repo_data(cur, conn, filepath)
-        process_event_data(cur, conn, filepath)
+    if (filepath != None): 
+       if (os.path.exists(filepath)): 
+           process_actor_data(cur, conn, filepath)
+           process_repo_data(cur, conn, filepath)
+           process_event_data(cur, conn, filepath)
+       else: 
+          logging.info('File path not exists.')
     else: 
-       logging.info('File path not exists.')
+       logging.info('File path not specified.')
 
     conn.close()
     logging.info('End of program')
