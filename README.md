@@ -1,4 +1,4 @@
-# Github events processing and analysis.
+# Github events processing and analysis
 
 Repository contains various approaches to process and analysis github events data.
 
