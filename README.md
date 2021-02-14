@@ -7,3 +7,7 @@ Repository contains various approaches to process and analysis github events dat
 * NoSql database using MongoDB - [show](mongo/README.md)
 * Aggregations using Spark Python - [show](pyspark_agg/README.md)
 * Aggregations using Spark Scala - [show](spark_scala_agg/README.md)
+
+Overview of the data pipeline is presented on below image:
+
+![image](pipeline.png)
