@@ -1,10 +1,11 @@
-# Github database - schema and ETL
+# Github database - schema, ETL, visualization
 
 **Overview**
 
 This approach provides the schema and ETL to create and populate an analytics database for the github events data.
 It has been designed as a PostgreSQL relational database in a star schema, which allows to analyze user's activities on github. 
 The scripts have been created in Python, leveraging its convenient wrapper around Postgres. PySpark has been used in order to effectively process data before insert to database.
+As a final step, some visualizations with the use of Power BI have been designed. 
 
 **Structure**
 
@@ -35,3 +36,7 @@ To run the project please run scripts in the following order:
 3. github_daily_process.py (script requires year month and day as argument)
 4. github_daily_etl.py (script requires path to parquet file created in previous step)
 
+**Examples of visualizations**
+
+*  [Overview dashboard](data/pbi1.png)
+*  [Daily dashboard](data/pbi2.png)
