@@ -1,4 +1,4 @@
-case class Git_agg_Schema(
+case class Git_Agg_Schema(
                            actor_id: String,
                            actor_login: String,
                            daily_date: String,
